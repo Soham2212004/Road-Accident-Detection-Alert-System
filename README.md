@@ -45,4 +45,4 @@ https://github.com/Soham2212004/Road-Accident-Detection-Alert-System/assets/1423
 ### The system is designed for use in surveillance and monitoring scenarios where quick detection and response to accidents are crucial. It can be deployed in traffic management systems, surveillance cameras, and other relevant environments.
 
 # Contact
-### For inquiries and support, contact Soham Soni.
+### For Dataset and inquiries, contact sonisoham91@gmail.com .
