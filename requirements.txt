@@ -1,0 +1,3 @@
+step 1:create twilio account .
+step 2:Insert your twilio credentials in the camera.py file.
+
