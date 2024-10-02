@@ -2,7 +2,13 @@
 
 
 
-https://github.com/Soham2212004/Road-Accident-Detection-Alert-System/assets/142389695/4298b54b-2189-412e-b60d-05f680e6be1c
+
+
+https://github.com/user-attachments/assets/69ecddbf-3db9-43bb-9c0e-81497fb50600
+
+
+
+
 
 
 # Road Accident Detection & Alert System
