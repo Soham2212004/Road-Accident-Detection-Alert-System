@@ -8,6 +8,8 @@ import time
 import tkinter as tk
 from twilio.rest import Client
 from PIL import Image, ImageTk  # Import PIL modules for image handling
+from logger import get_logger
+logger = get_logger()
 
 emergency_timer = None
 alarm_triggered = False  # Flag to track if an alarm has been triggered
@@ -23,9 +25,9 @@ def save_accident_photo(frame):
             os.makedirs(directory)
         filename = f"{directory}/{current_date_time}.jpg"
         cv2.imwrite(filename, frame)
-        print(f"Accident photo saved as {filename}")
+        logger.info(f"Accident photo saved: {filename}")
     except Exception as e:
-        print(f"Error saving accident photo: {e}")
+        logger.error(f"Error saving accident photo: {e}")
 
 def call_ambulance():
     try:
@@ -38,10 +40,9 @@ def call_ambulance():
             to="sender_number",  # add verified ambulance number 
             from_="receiver_number"
         )
-        print(call.sid)
+        logger.info(f"Ambulance call initiated: {call.sid}")
     except Exception as e:
-        print(f"Error calling ambulance: {e}")
-
+        logger.error(f"Error calling ambulance: {e}")
 def show_alert_message():
     def on_call_ambulance():
         call_ambulance()
@@ -69,7 +70,8 @@ def show_alert_message():
         gif_label = tk.Label(alert_window, image=gif_image)
         gif_label.pack()
     except Exception as e:
-        print(f"Error loading GIF: {e}")
+        logger.error(f"Error loading GIF: {e}")
+
 
     call_ambulance_button = tk.Button(alert_window, text="Call Ambulance", command=on_call_ambulance)
     call_ambulance_button.pack()
@@ -85,34 +87,54 @@ def start_alert_thread():
     alert_thread.start()
 
 def startapplication():
-    global alarm_triggered  # Use global variable for tracking alarm status
-    video = cv2.VideoCapture("test_video_path") 
-    while True:
-        ret, frame = video.read()
-        if not ret:
-            print("No more frames to read")
-            break
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        roi = cv2.resize(gray_frame, (250, 250))
+    global alarm_triggered
+    try:
+        logger.info("Application started")
 
-        pred, prob = model.predict_accident(roi[np.newaxis, :, :])
-        if pred == "Accident" and not alarm_triggered:
-            prob = round(prob[0][0] * 100, 2)
-            
-            if prob > 99:
-                # frequency = 2500  
-                # duration = 2000  
-                # winsound.Beep(frequency, duration)
-                save_accident_photo(frame)
-                alarm_triggered = True  # Set the alarm_triggered flag to True
-                start_alert_thread()  # Start the alert message thread
+        video = cv2.VideoCapture("test_video_path")
+        logger.info("Video source opened")
 
-            cv2.rectangle(frame, (0, 0), (280, 40), (0, 0, 0), -1)
-            cv2.putText(frame, pred + " " + str(prob), (20, 30), font, 1, (255, 255, 0), 2)
+        while True:
+            ret, frame = video.read()
+            if not ret:
+                logger.warning("No more frames to read")
+                break
 
-        if cv2.waitKey(33) & 0xFF == ord('q'):
-            return
-        cv2.imshow('Video', frame)  
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            roi = cv2.resize(gray_frame, (250, 250))
+
+            pred, prob = model.predict_accident(roi[np.newaxis, :, :])
+
+            if pred == "Accident" and not alarm_triggered:
+                prob = round(prob[0][0] * 100, 2)
+                logger.info(f"Accident detected with confidence {prob}%")
+
+                if prob > 99:
+                    save_accident_photo(frame)
+                    alarm_triggered = True
+                    start_alert_thread()
+                    logger.info("Alert thread started")
+
+                cv2.rectangle(frame, (0, 0), (280, 40), (0, 0, 0), -1)
+                cv2.putText(
+                    frame,
+                    pred + " " + str(prob),
+                    (20, 30),
+                    font,
+                    1,
+                    (255, 255, 0),
+                    2
+                )
+
+            if cv2.waitKey(33) & 0xFF == ord('q'):
+                logger.info("Application stopped by user")
+                return
+
+            cv2.imshow('Video', frame)
+
+    except Exception as e:
+        logger.critical(f"Application crashed: {e}")
+
 
 if __name__ == '__main__':
     startapplication()
